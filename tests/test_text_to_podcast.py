@@ -4,7 +4,7 @@ from unittest.mock import Mock
 import azure.functions as func
 
 # Import the function to be tested
-from TextToPodcast.__init__ import main, _build_error_response
+from TextToPodcast.__init__ import main
 
 class TestTextToPodcast(unittest.TestCase):
 
@@ -102,23 +102,6 @@ class TestTextToPodcast(unittest.TestCase):
         expected_body = {
             "error": "Internal server error",
             "message": "An unexpected error occurred while processing your request"
-        }
-        self.assertEqual(json.loads(response.get_body()), expected_body)
-
-    # It's also good practice to test the helper function directly,
-    # although it's indirectly tested by the main function tests.
-    def test_build_error_response_helper(self):
-        error_summary = "Test Error"
-        error_message = "This is a test error message."
-        status_code = 418  # I'm a teapot
-
-        response = _build_error_response(error_summary, error_message, status_code)
-
-        self.assertEqual(response.status_code, status_code)
-        self.assertEqual(response.mimetype, "application/json")
-        expected_body = {
-            "error": error_summary,
-            "message": error_message
         }
         self.assertEqual(json.loads(response.get_body()), expected_body)
 

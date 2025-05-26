@@ -1,29 +1,7 @@
 import logging
 import json
 import azure.functions as func
-
-
-def _build_error_response(error_summary: str, error_message: str, status_code: int) -> func.HttpResponse:
-    """
-    Builds an error HTTP response with a JSON body.
-
-    Args:
-        error_summary (str): A summary of the error.
-        error_message (str): A detailed message about the error.
-        status_code (int): The HTTP status code for the response.
-
-    Returns:
-        func.HttpResponse: The HTTP response object.
-    """
-    return func.HttpResponse(
-        json.dumps({
-            "error": error_summary,
-            "message": error_message
-        }),
-        status_code=status_code,
-        mimetype="application/json",  # Explicitly set mimetype
-        headers={"Content-Type": "application/json"}
-    )
+from .builders.response_builder import JsonResponseBuilder
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -48,29 +26,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         req_body = req.get_json()
         
         if not req_body:
-            return _build_error_response(
-                error_summary="Request body is required",
-                error_message="Please provide a JSON body with a 'name' field",
-                status_code=400
-            )
+            return (JsonResponseBuilder()
+                    .with_status_code(400)
+                    .with_error_payload("Request body is required", "Please provide a JSON body with a 'name' field")
+                    .build())
         
         # Extract the name from the request
         name = req_body.get('name')
         
         if not name:
-            return _build_error_response(
-                error_summary="Missing required field",
-                error_message="The 'name' field is required in the JSON body",
-                status_code=400
-            )
+            return (JsonResponseBuilder()
+                    .with_status_code(400)
+                    .with_error_payload("Missing required field", "The 'name' field is required in the JSON body")
+                    .build())
         
         # Validate name is not empty
         if not name.strip():
-            return _build_error_response(
-                error_summary="Invalid name",
-                error_message="The 'name' field cannot be empty",
-                status_code=400
-            )
+            return (JsonResponseBuilder()
+                    .with_status_code(400)
+                    .with_error_payload("Invalid name", "The 'name' field cannot be empty")
+                    .build())
         
         # Create response message
         response_message = f"Hello, {name.strip()}! Welcome to My Translator service."
@@ -79,28 +54,21 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info(f'Successfully processed request for name: {name}')
         
         # Return success response
-        return func.HttpResponse(
-            json.dumps({
-                "message": response_message,
-                "status": "success",
-                "name": name.strip()
-            }),
-            status_code=200,
-            headers={"Content-Type": "application/json"}
-        )
+        return (JsonResponseBuilder()
+                .with_status_code(200)
+                .with_success_payload(response_message, name.strip())
+                .build())
         
     except json.JSONDecodeError:
         logging.error('Invalid JSON in request body')
-        return _build_error_response(
-            error_summary="Invalid JSON",
-            error_message="Request body must be valid JSON",
-            status_code=400
-        )
+        return (JsonResponseBuilder()
+                .with_status_code(400)
+                .with_error_payload("Invalid JSON", "Request body must be valid JSON")
+                .build())
         
     except Exception as e:
         logging.error(f'Unexpected error: {str(e)}')
-        return _build_error_response(
-            error_summary="Internal server error",
-            error_message="An unexpected error occurred while processing your request",
-            status_code=500
-        )
+        return (JsonResponseBuilder()
+                .with_status_code(500)
+                .with_error_payload("Internal server error", "An unexpected error occurred while processing your request")
+                .build())
