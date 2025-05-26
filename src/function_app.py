@@ -1,10 +1,13 @@
 import logging
 import json
 import azure.functions as func
-from .builders.response_builder import JsonResponseBuilder
+from builders.response_builder import JsonResponseBuilder
 
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+app = func.FunctionApp()
+@app.function_name(name="text_to_podcast")
+@app.route(route="text-to-podcast", methods=["POST"])
+def textToPodcast(req: func.HttpRequest) -> func.HttpResponse:
     """
     Azure Function that receives a POST request with a JSON containing a name
     and returns a greeting message.

@@ -110,6 +110,10 @@ ENV/
 env.bak/
 venv.bak/
 
+.vscode/
+# PyCharm   
+.idea/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -142,7 +146,6 @@ local.settings.json
 .azurefunctions/
 
 # Visual Studio Code
-.vscode/
 
 # Visual Studio
 *.user
@@ -178,3 +181,5 @@ Thumbs.db
 # Function app and host keys
 host.json.bak
 proxies.json.bak
+
+.python_packages
