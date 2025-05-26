@@ -3,20 +3,17 @@ import json
 from unittest.mock import Mock
 import azure.functions as func
 
-# Import the function to be tested
-from TextToPodcast.__init__ import main
+# Assuming 'src' is a top-level package in the PYTHONPATH for tests
+from src.__init__ import main
 
-class TestTextToPodcast(unittest.TestCase):
+class TestMainFunction(unittest.TestCase):
 
     def test_successful_request(self):
-        # Mock HttpRequest
         req = Mock(spec=func.HttpRequest)
         req.get_json.return_value = {"name": "Test User"}
 
-        # Call the function
         response = main(req)
 
-        # Assertions
         self.assertEqual(response.status_code, 200)
         expected_body = {
             "message": "Hello, Test User! Welcome to My Translator service.",
@@ -26,14 +23,11 @@ class TestTextToPodcast(unittest.TestCase):
         self.assertEqual(json.loads(response.get_body()), expected_body)
 
     def test_missing_request_body(self):
-        # Mock HttpRequest
         req = Mock(spec=func.HttpRequest)
-        req.get_json.return_value = None
+        req.get_json.return_value = None # Simulate empty body or failure to parse
 
-        # Call the function
         response = main(req)
 
-        # Assertions
         self.assertEqual(response.status_code, 400)
         expected_body = {
             "error": "Request body is required",
@@ -42,14 +36,11 @@ class TestTextToPodcast(unittest.TestCase):
         self.assertEqual(json.loads(response.get_body()), expected_body)
 
     def test_missing_name_field(self):
-        # Mock HttpRequest
         req = Mock(spec=func.HttpRequest)
         req.get_json.return_value = {"other_field": "some_value"}
 
-        # Call the function
         response = main(req)
 
-        # Assertions
         self.assertEqual(response.status_code, 400)
         expected_body = {
             "error": "Missing required field",
@@ -58,14 +49,11 @@ class TestTextToPodcast(unittest.TestCase):
         self.assertEqual(json.loads(response.get_body()), expected_body)
 
     def test_empty_name_field(self):
-        # Mock HttpRequest
         req = Mock(spec=func.HttpRequest)
-        req.get_json.return_value = {"name": "   "}
+        req.get_json.return_value = {"name": "   "} # Name with only whitespace
 
-        # Call the function
         response = main(req)
 
-        # Assertions
         self.assertEqual(response.status_code, 400)
         expected_body = {
             "error": "Invalid name",
@@ -74,14 +62,12 @@ class TestTextToPodcast(unittest.TestCase):
         self.assertEqual(json.loads(response.get_body()), expected_body)
 
     def test_invalid_json_body(self):
-        # Mock HttpRequest
         req = Mock(spec=func.HttpRequest)
-        req.get_json.side_effect = json.JSONDecodeError("Error", "doc", 0)
+        # Simulate JSONDecodeError when .get_json() is called
+        req.get_json.side_effect = json.JSONDecodeError("Expecting value", "doc", 0)
 
-        # Call the function
         response = main(req)
 
-        # Assertions
         self.assertEqual(response.status_code, 400)
         expected_body = {
             "error": "Invalid JSON",
@@ -90,14 +76,16 @@ class TestTextToPodcast(unittest.TestCase):
         self.assertEqual(json.loads(response.get_body()), expected_body)
 
     def test_unexpected_error(self):
-        # Mock HttpRequest
         req = Mock(spec=func.HttpRequest)
-        req.get_json.side_effect = Exception("Unexpected error")
-
-        # Call the function
+        # Simulate a generic exception during the processing.
+        # Mocking .get_json() to return a dictionary, then .get() on that dict to raise an Exception.
+        # This simulates an error after successfully getting JSON but during its processing.
+        mock_dict = Mock(spec=dict)
+        mock_dict.get.side_effect = Exception("A very unexpected error occurred")
+        req.get_json.return_value = mock_dict
+        
         response = main(req)
 
-        # Assertions
         self.assertEqual(response.status_code, 500)
         expected_body = {
             "error": "Internal server error",

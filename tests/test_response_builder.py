@@ -2,9 +2,9 @@ import unittest
 import json
 import azure.functions as func
 
-# Adjust the import path if necessary based on how tests are run.
-# Assuming 'TextToPodcast' is a top-level package in thePYTHONPATH
-from TextToPodcast.builders.response_builder import JsonResponseBuilder
+# Assuming 'src' is a top-level package in the PYTHONPATH for tests
+# (e.g. tests are run from project root)
+from src.builders.response_builder import JsonResponseBuilder
 
 class TestJsonResponseBuilder(unittest.TestCase):
 
@@ -42,69 +42,60 @@ class TestJsonResponseBuilder(unittest.TestCase):
         builder = JsonResponseBuilder()
         response = (builder
                     .with_status_code(201)
-                    .with_header("X-Custom-Header", "CustomValue")
-                    .with_success_payload("Created", "Resource") # Needs a payload for body
+                    .with_header("X-Custom", "Value")
+                    .with_success_payload("Created", "Resource") # Body needed for valid response
                     .build())
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.headers["X-Custom-Header"], "CustomValue")
-        self.assertEqual(response.headers["Content-Type"], "application/json") # Default should still be there
+        self.assertEqual(response.headers["X-Custom"], "Value")
+        # Default Content-Type should still be applied
+        self.assertEqual(response.headers["Content-Type"], "application/json")
         self.assertEqual(response.mimetype, "application/json")
-
 
     def test_build_raises_value_error_if_status_not_set(self):
         builder = JsonResponseBuilder()
-        with self.assertRaises(ValueError) as context:
+        # Test with success payload
+        with self.assertRaises(ValueError) as context_success:
             builder.with_success_payload("Hi", "There").build()
-        
-        self.assertEqual(str(context.exception), "Status code must be set before building the response.")
+        self.assertEqual(str(context_success.exception), "Status code must be set before building the response.")
 
-        builder_for_error = JsonResponseBuilder()
+        # Test with error payload (reset builder or use new one for clarity)
+        builder_error = JsonResponseBuilder() 
         with self.assertRaises(ValueError) as context_error:
-            builder_for_error.with_error_payload("Error", "Msg").build()
-
+            builder_error.with_error_payload("Error", "Msg").build()
         self.assertEqual(str(context_error.exception), "Status code must be set before building the response.")
 
+    def test_payload_methods_chainable(self):
+        builder = JsonResponseBuilder()
+
+        # Test with_status_code chainability
+        self.assertIs(builder.with_status_code(200), builder, "with_status_code should be chainable")
+
+        # Test with_header chainability
+        self.assertIs(builder.with_header("X-Test", "TestValue"), builder, "with_header should be chainable")
+
+        # Test with_success_payload chainability
+        self.assertIs(builder.with_success_payload("Msg", "Name"), builder, "with_success_payload should be chainable")
+
+        # Test with_error_payload chainability
+        # Create a new builder instance for a clean test of with_error_payload
+        builder_for_error = JsonResponseBuilder()
+        self.assertIs(builder_for_error.with_error_payload("Err", "Msg"), builder_for_error, "with_error_payload should be chainable")
 
     def test_override_content_type_header(self):
         builder = JsonResponseBuilder()
         response = (builder
                     .with_status_code(415)
                     .with_header("Content-Type", "application/xml")
-                    .with_error_payload("Unsupported Media", "Payload should be XML")
+                    .with_error_payload("Unsupported Media", "Payload should be XML, not JSON") # Body needed
                     .build())
 
         self.assertEqual(response.status_code, 415)
-        # The custom header should override the default Content-Type
+        # The custom Content-Type header should override the default
         self.assertEqual(response.headers["Content-Type"], "application/xml")
-        # Mimetype is set by the builder based on its own logic, might not reflect overridden header
-        self.assertEqual(response.mimetype, "application/json") 
-        # This ^ assertion confirms the note in the task: mimetype is set independently by the builder.
-
-
-    def test_payload_methods_chainable(self):
-        builder = JsonResponseBuilder()
-        # Test with_status_code chainability
-        chained_builder = builder.with_status_code(200)
-        self.assertIsInstance(chained_builder, JsonResponseBuilder)
-        self.assertIs(chained_builder, builder) # Check if it returns self
-
-        # Test with_header chainability
-        chained_builder = builder.with_header("X-Test", "TestValue")
-        self.assertIsInstance(chained_builder, JsonResponseBuilder)
-        self.assertIs(chained_builder, builder)
-
-        # Test with_success_payload chainability
-        chained_builder = builder.with_success_payload("Msg", "Name")
-        self.assertIsInstance(chained_builder, JsonResponseBuilder)
-        self.assertIs(chained_builder, builder)
-
-        # Test with_error_payload chainability
-        # Re-initialize for a clean state if needed, though it's fine for this test
-        builder_error = JsonResponseBuilder() 
-        chained_builder_error = builder_error.with_error_payload("Err", "Msg")
-        self.assertIsInstance(chained_builder_error, JsonResponseBuilder)
-        self.assertIs(chained_builder_error, builder_error)
+        # The mimetype is set by the builder to "application/json" regardless of the Content-Type header override.
+        # This confirms the builder's behavior: it sets mimetype based on its assumption of building JSON responses.
+        self.assertEqual(response.mimetype, "application/json")
 
 if __name__ == '__main__':
     unittest.main()
