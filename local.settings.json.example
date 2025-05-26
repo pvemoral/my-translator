@@ -1,0 +1,34 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=your_storage_account;AccountKey=your_storage_key;EndpointSuffix=core.windows.net",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    
+    "SPEECH_SERVICE_KEY": "your_cognitive_services_speech_key",
+    "SPEECH_SERVICE_REGION": "your_speech_service_region",
+    
+    "STORAGE_CONNECTION_STRING": "DefaultEndpointsProtocol=https;AccountName=your_storage_account;AccountKey=your_storage_key;EndpointSuffix=core.windows.net",
+    "STORAGE_CONTAINER_NAME": "audio-files",
+    
+    "KEYVAULT_URL": "https://your-keyvault.vault.azure.net/",
+    
+    "APPLICATIONINSIGHTS_CONNECTION_STRING": "InstrumentationKey=your_app_insights_key;IngestionEndpoint=https://your_region.in.applicationinsights.azure.com/;LiveEndpoint=https://your_region.livediagnostics.monitor.azure.com/",
+    
+    "LOG_LEVEL": "INFO",
+    "MAX_AUDIO_DURATION": "1800",
+    "MAX_TEXT_LENGTH": "10000",
+    "ALLOWED_AUDIO_FORMATS": "mp3,wav,ogg",
+    "DEFAULT_VOICE": "en-US-AriaNeural",
+    "DEFAULT_SPEED": "medium",
+    
+    "CORS_ORIGINS": "*",
+    "API_VERSION": "v1"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "*",
+    "CORSCredentials": false
+  },
+  "ConnectionStrings": {}
+}
