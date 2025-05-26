@@ -23,16 +23,6 @@
     "healthCheckThreshold": 6,
     "counterThreshold": 0.80
   },
-  "http": {
-    "routePrefix": "api",
-    "maxConcurrentRequests": 5,
-    "maxOutstandingRequests": 8,
-    "customHeaders": {
-      "X-Content-Type-Options": "nosniff",
-      "X-Frame-Options": "DENY",
-      "X-XSS-Protection": "1; mode=block"
-    }
-  },
   "watchDirectories": ["Shared"],
   "extensions": {
     "http": {
